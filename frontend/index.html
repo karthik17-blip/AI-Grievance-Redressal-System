@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AI Grievance System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-10">
+
+<div class="max-w-3xl mx-auto bg-white p-6 rounded shadow">
+
+<h1 class="text-3xl font-bold mb-6">AI-Powered Grievance System</h1>
+
+<textarea id="complaint"
+class="w-full p-4 border rounded"
+rows="5"
+placeholder="Enter your complaint..."></textarea>
+
+<button onclick="submitComplaint()"
+class="mt-4 bg-blue-600 text-white px-6 py-2 rounded">
+Submit
+</button>
+
+<div id="loading" class="mt-4 text-gray-600 hidden">
+Processing complaint...
+</div>
+
+<div id="result" class="mt-6 hidden p-4 bg-green-100 rounded"></div>
+
+</div>
+
+<script>
+
+async function submitComplaint(){
+
+const text = document.getElementById("complaint").value
+
+document.getElementById("loading").classList.remove("hidden")
+
+const response = await fetch("http://127.0.0.1:8000/predict",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({text:text})
+})
+
+const data = await response.json()
+
+document.getElementById("loading").classList.add("hidden")
+
+document.getElementById("result").classList.remove("hidden")
+
+document.getElementById("result").innerHTML = `
+<h2 class="text-xl font-bold mb-2">Prediction Result</h2>
+
+<p><b>Category:</b> ${data.predicted_category}</p>
+<p><b>Category Confidence:</b> ${data.category_confidence}</p>
+
+<p><b>Urgency:</b> ${data.urgency}</p>
+<p><b>Urgency Confidence:</b> ${data.urgency_confidence}</p>
+
+<p><b>Department:</b> ${data.assigned_department}</p>
+
+<hr class="my-3">
+
+<p><b>Duplicate:</b> ${data.duplicate_info.is_duplicate}</p>
+<p><b>Similarity Score:</b> ${data.duplicate_info.similarity_score}</p>
+
+`
+}
+
+</script>
+
+</body>
+</html>

@@ -1,18 +1,35 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
-import numpy as np
 import torch.nn.functional as F
 
+from ai.duplicate import check_duplicate
+
+
+# CREATE APP FIRST
 app = FastAPI()
 
-# Load model and tokenizer
+
+# THEN ADD MIDDLEWARE
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# Load model
 model_path = "./grievance_model"
+
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 model = AutoModelForSequenceClassification.from_pretrained(model_path)
 
-# Label mapping (IMPORTANT: match your training order)
+
 labels = [
     "Education",
     "Electricity",
@@ -23,6 +40,8 @@ labels = [
     "Telecommunications",
     "Water Supply"
 ]
+
+
 department_mapping = {
     "Water Supply": "Water Authority",
     "Electricity": "Electricity Board",
@@ -38,8 +57,10 @@ department_mapping = {
 class TextInput(BaseModel):
     text: str
 
+
 @app.post("/predict")
 def predict(input: TextInput):
+
     inputs = tokenizer(
         input.text,
         return_tensors="pt",
@@ -61,11 +82,14 @@ def predict(input: TextInput):
 
     assigned_department = department_mapping[predicted_label]
 
+    duplicate_info = check_duplicate(input.text)
+
     return {
         "text": input.text,
         "predicted_category": predicted_label,
-        "confidence": confidence_score,
-        "assigned_department": assigned_department
+        "category_confidence": confidence_score,
+        "urgency": "Low",
+        "urgency_confidence": 1,
+        "assigned_department": assigned_department,
+        "duplicate_info": duplicate_info
     }
-
-
