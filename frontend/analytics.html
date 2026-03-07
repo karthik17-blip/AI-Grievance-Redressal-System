@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Complaint Analytics</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-gray-100 p-10">
+
+<h1 class="text-3xl font-bold mb-6">Complaint Analytics Dashboard</h1>
+
+<div class="grid grid-cols-2 gap-10">
+
+<div class="bg-white p-6 shadow rounded">
+<h2 class="text-xl mb-4">Complaints by Category</h2>
+<canvas id="categoryChart"></canvas>
+</div>
+
+<div class="bg-white p-6 shadow rounded">
+<h2 class="text-xl mb-4">Urgency Distribution</h2>
+<canvas id="urgencyChart"></canvas>
+</div>
+
+</div>
+
+<script>
+
+async function loadStats(){
+
+const response = await fetch("http://52.90.55.70:8000/stats")
+const data = await response.json()
+
+const categories = Object.keys(data.category_stats)
+const categoryCounts = Object.values(data.category_stats)
+
+const urgency = Object.keys(data.urgency_stats)
+const urgencyCounts = Object.values(data.urgency_stats)
+
+new Chart(document.getElementById("categoryChart"), {
+type: 'bar',
+data: {
+labels: categories,
+datasets: [{
+label: 'Complaints',
+data: categoryCounts
+}]
+}
+})
+
+new Chart(document.getElementById("urgencyChart"), {
+type: 'pie',
+data: {
+labels: urgency,
+datasets: [{
+data: urgencyCounts
+}]
+}
+})
+
+}
+
+loadStats()
+
+</script>
+
+</body>
+</html>
